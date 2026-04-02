@@ -1,6 +1,8 @@
-flask
+fastapi
+uvicorn
 numpy
 opencv-python-headless
 pytesseract
 pillow
 requests
+python-multipart
