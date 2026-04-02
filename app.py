@@ -1,6 +1,4 @@
 import pytesseract
-
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 from fastapi import FastAPI, File, UploadFile
 import numpy as np
 import cv2
@@ -13,7 +11,8 @@ pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tessera
 
 app = FastAPI()
 
-API_KEY = "qgA27H5B1ltUlUS5mt19mBktDpbIkuUu"
+import os
+API_KEY = os.getenv("qgA27H5B1ltUlUS5mt19mBktDpbIkuUu")
 
 
 # -------- OCR --------
