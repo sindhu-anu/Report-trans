@@ -24,7 +24,11 @@ if not API_KEY:
 # -------- OCR --------
 def ocr_image(image):
     pil_img = Image.fromarray(image)
-    return pytesseract.image_to_string(pil_img)
+
+    # Faster OCR config
+    custom_config = r'--oem 3 --psm 6'
+
+    return pytesseract.image_to_string(pil_img, config=custom_config)
 
 
 # -------- Mistral API --------
@@ -37,18 +41,25 @@ def process_cbcs(text):
             "Content-Type": "application/json"
         }
 
+        # LIMIT TEXT SIZE (CRITICAL for speed)
+        text = text[:2000]
+
         data = {
             "model": "mistral-small",
-            "messages": [{"role": "user", "content": text}]
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"Extract structured data from this lab report:\n{text}"
+                }
+            ]
         }
 
-        response = requests.post(url, headers=headers, json=data)
+        response = requests.post(url, headers=headers, json=data, timeout=20)
 
         return response.json()
 
     except Exception as e:
         return {"error": str(e)}
-
 
 # -------- ROUTE --------
 @app.post("/process")
@@ -59,12 +70,18 @@ async def process_image(file: UploadFile = File(...)):
         nparr = np.frombuffer(contents, np.uint8)
         image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
+        # ✅ ADD THIS (IMPORTANT)
+        image = preprocess_image(image)
+
         text = ocr_image(image)
 
         result = process_cbcs(text)
 
-        return {"result": result}
+        return {
+            "status": "success",
+            "ocr_text": text[:500],  # preview
+            "result": result
+        }
 
     except Exception as e:
-        print("ERROR:", str(e))
         return {"error": str(e)}
