@@ -2,12 +2,15 @@ import pytesseract
 from fastapi import FastAPI, File, UploadFile
 import numpy as np
 import cv2
-import pytesseract
 from PIL import Image
 import requests
 
 # 🔴 SET THIS PATH (VERY IMPORTANT)
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+import platform
+
+if platform.system() == "Windows":
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+print(pytesseract.get_tesseract_version())
 
 app = FastAPI()
 
