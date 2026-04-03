@@ -15,7 +15,11 @@ print(pytesseract.get_tesseract_version())
 app = FastAPI()
 
 import os
-API_KEY = os.getenv("qgA27H5B1ltUlUS5mt19mBktDpbIkuUu")
+
+API_KEY = os.getenv("MISTRAL_API_KEY")
+
+if not API_KEY:
+    raise ValueError("MISTRAL_API_KEY not set")
 
 
 # -------- OCR --------
@@ -26,41 +30,42 @@ def ocr_image(image):
 
 # -------- Mistral API --------
 def process_cbcs(text):
-    url = "https://api.mistral.ai/v1/chat/completions"
+    try:
+        url = "https://api.mistral.ai/v1/chat/completions"
 
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-    "model": "mistral-small",
-    "messages": [
-        {
-            "role": "user",
-            "content": (
-                "Extract CBCS lab report data.\n"
-                "Return ONLY JSON.\n\n"
-                f"Text:\n{text[:3000]}"
-            )
+        headers = {
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json"
         }
-    ]
-}
 
-    response = requests.post(url, headers=headers, json=payload)
-    print(response.text)
-    return response.json()
+        data = {
+            "model": "mistral-small",
+            "messages": [{"role": "user", "content": text}]
+        }
+
+        response = requests.post(url, headers=headers, json=data)
+
+        return response.json()
+
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # -------- ROUTE --------
 @app.post("/process")
 async def process_image(file: UploadFile = File(...)):
-    contents = await file.read()
+    try:
+        contents = await file.read()
 
-    nparr = np.frombuffer(contents, np.uint8)
-    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        nparr = np.frombuffer(contents, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-    text = ocr_image(image)
-    result = process_cbcs(text)
+        text = ocr_image(image)
 
-    return {"result": result}
+        result = process_cbcs(text)
+
+        return {"result": result}
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return {"error": str(e)}
