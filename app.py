@@ -20,7 +20,16 @@ API_KEY = os.getenv("MISTRAL_API_KEY")
 if not API_KEY:
     raise ValueError("MISTRAL_API_KEY not set")
 
+def preprocess_image(image):
+    height, width = image.shape[:2]
 
+    if width > 1000:
+        scale = 1000 / width
+        image = cv2.resize(image, (int(width * scale), int(height * scale)))
+
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    return gray
 # -------- OCR --------
 def ocr_image(image):
     pil_img = Image.fromarray(image)
