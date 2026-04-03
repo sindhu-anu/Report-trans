@@ -1,12 +1,15 @@
 services:
   - type: web
-    name: report-trans
+    name: report-trans-api
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app:app --host 0.0.0.0 --port 10000
+
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: RENDER_NATIVE_PACKAGES
         value: tesseract-ocr
+      - key: MISTRAL_API_KEY
+        sync: false
